@@ -1,0 +1,4 @@
+[wrap-git]
+url = https://github.com/juniorrantila/LibTy.git
+revision = main
+depth = 1
