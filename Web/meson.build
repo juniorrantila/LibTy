@@ -3,6 +3,7 @@ web_lib = library('web', [
       'FileRouter.cpp',
       'MimeType.cpp',
     ],
+    cpp_args: base_cpp_args,
     dependencies: [
       core_dep,
       ty_dep,

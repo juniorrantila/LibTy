@@ -10,7 +10,8 @@ core_deps = [
 
 core_lib = library('core',
   core_sources,
-  dependencies: core_deps 
+  dependencies: core_deps,
+  cpp_args: base_cpp_args
   )
 
 core_dep = declare_dependency(
@@ -20,7 +21,7 @@ core_dep = declare_dependency(
 
 test_me += shared_library('core-tests',
   core_sources,
-  cpp_args: '-DLIBTY_INCLUDE_TESTS',
+  cpp_args: [base_cpp_args, '-DLIBTY_INCLUDE_TESTS'],
   dependencies: [
     core_deps,
     unit_dep,

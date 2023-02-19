@@ -8,20 +8,18 @@ project('LibTy', 'cpp',
     'buildtype=release'
   ])
 
-if not meson.is_subproject()
-  add_global_arguments([
-    '-Wno-gnu-case-range',
-    '-Wno-c99-designator',
-    '-Wno-c99-extensions',
-    '-Wno-gnu-anonymous-struct',
-    '-Wno-gnu-conditional-omitted-operand',
-    '-Wno-gnu-statement-expression',
-    '-Wno-gnu-zero-variadic-macro-arguments',
-    '-Wno-user-defined-literals',
-    '-fdebug-prefix-map=../=',
-    '-ffile-prefix-map=../=',
-  ], language: 'cpp')
-endif
+base_cpp_args = [
+  '-Wno-gnu-case-range',
+  '-Wno-c99-designator',
+  '-Wno-c99-extensions',
+  '-Wno-gnu-anonymous-struct',
+  '-Wno-gnu-conditional-omitted-operand',
+  '-Wno-gnu-statement-expression',
+  '-Wno-gnu-zero-variadic-macro-arguments',
+  '-Wno-user-defined-literals',
+  '-fdebug-prefix-map=../=',
+  '-ffile-prefix-map=../=',
+]
 
 test_me = []
 

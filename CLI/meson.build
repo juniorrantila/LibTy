@@ -9,7 +9,8 @@ cli_deps = [
 
 cli_lib = library('cli',
   cli_sources,
-  dependencies: cli_deps
+  dependencies: cli_deps,
+  cpp_args: base_cpp_args
   )
 
 cli_dep = declare_dependency(
@@ -19,7 +20,7 @@ cli_dep = declare_dependency(
 
 test_me += shared_library('cli-tests',
   cli_sources,
-  cpp_args: '-DLIBTY_INCLUDE_TESTS',
+  cpp_args: [base_cpp_args, '-DLIBTY_INCLUDE_TESTS'],
   dependencies: [
     cli_deps,
     unit_dep,

@@ -9,7 +9,8 @@ mem_deps = [
 
 mem_lib = library('mem',
   mem_sources,
-  dependencies: mem_deps
+  dependencies: mem_deps,
+  cpp_args: base_cpp_args
   )
 
 mem_dep = declare_dependency(
@@ -19,7 +20,7 @@ mem_dep = declare_dependency(
 
 test_me += shared_library('mem-tests',
   mem_sources,
-  cpp_args: '-DLIBTY_INCLUDE_TESTS',
+  cpp_args: [base_cpp_args, '-DLIBTY_INCLUDE_TESTS'],
   dependencies: [
     mem_deps,
     unit_dep,

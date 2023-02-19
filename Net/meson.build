@@ -2,6 +2,7 @@ net_lib = library('net', [
     'TCPClientConnection.cpp',
     'TCPListener.cpp',
   ],
+  cpp_args: base_cpp_args,
   dependencies: [
     core_dep,
     ty_dep,

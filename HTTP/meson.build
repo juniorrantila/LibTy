@@ -2,6 +2,7 @@ http_lib = library('http', [
       'Headers.cpp',
       'Response.cpp',
     ],
+    cpp_args: base_cpp_args,
     dependencies: [
       core_dep,
       ty_dep,
