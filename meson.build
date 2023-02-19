@@ -23,18 +23,9 @@ base_cpp_args = [
 
 test_me = []
 
-subdir('Unit')
-subdir('Ty')
-subdir('Core')
-subdir('Mem')
-subdir('CLI')
-subdir('Main')
-subdir('HTTP')
-subdir('Net')
-subdir('Web')
+subdir('src')
 
 if not meson.is_subproject()
-  subdir('TestRunner')
   run_target('run-tests', command: [
     test_runner_exe,
     test_me,

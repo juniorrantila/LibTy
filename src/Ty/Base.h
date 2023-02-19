@@ -67,4 +67,32 @@ using nullptr_t = decltype(nullptr);
 
 }
 
-using namespace Ty;
+// clang-format off
+using Ty::i8;
+using Ty::i16;
+using Ty::i32;
+using Ty::i64;
+
+using Ty::u8;
+using Ty::u16;
+using Ty::u32;
+using Ty::u64;
+
+using Ty::i128;
+using Ty::u128;
+
+using Ty::isize;
+using Ty::usize;
+
+using Ty::TypeFromSize;
+
+using Ty::iptr;
+using Ty::uptr;
+
+using Ty::f32;
+using Ty::f64;
+
+using Ty::c_string;
+
+using Ty::nullptr_t;
+// clang-format on
