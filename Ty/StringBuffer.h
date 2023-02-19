@@ -50,6 +50,15 @@ struct StringBuffer {
         return buffer;
     }
 
+    template <typename T>
+    static constexpr ErrorOr<StringBuffer> create_fill(T value)
+    {
+        auto capacity = TRY(FormatCounter::count(value)) + 1;
+        auto buffer = TRY(create(capacity));
+        TRY(buffer.write(value));
+        return buffer;
+    }
+
     constexpr StringBuffer()
         : m_data(m_storage)
         , m_capacity(inline_capacity)
@@ -78,6 +87,23 @@ struct StringBuffer {
         }
     }
 
+    constexpr StringBuffer& operator=(StringBuffer&& other)
+    {
+        this->~StringBuffer();
+
+        m_data = other.m_data;
+        m_size = other.m_size;
+        m_capacity = other.m_capacity;
+        if (!other.is_saturated()) {
+            __builtin_memcpy(m_storage, other.m_storage,
+                inline_capacity);
+            m_data = m_storage;
+        }
+        other.invalidate();
+
+        return *this;
+    }
+
     template <typename... Args>
     constexpr ErrorOr<u32> write(Args... args) requires(
         sizeof...(Args) > 1)
@@ -100,8 +126,7 @@ struct StringBuffer {
 
     constexpr ErrorOr<u32> write(StringView string)
     {
-        if (m_size + string.size >= m_capacity)
-            return Error::from_string_literal("buffer filled");
+        TRY(expand_if_needed_for_write(string.size));
         auto size = string.unchecked_copy_to(&m_data[m_size]);
         m_size += size;
         return size;
@@ -150,6 +175,25 @@ struct StringBuffer {
         c_string ptr = data();
         invalidate();
         return ptr;
+    }
+
+    ErrorOr<void> expand_if_needed_for_write(u32 size)
+    {
+        if (m_size + size >= m_capacity)
+            TRY(expand_by(size));
+        return {};
+    }
+
+    ErrorOr<void> expand_by(u32 size)
+    {
+        auto new_capacity = m_size + size;
+        auto* new_data = (char*)TRY(allocate_memory(new_capacity));
+        __builtin_memcpy(new_data, data(), m_size);
+        if (is_saturated())
+            free_memory(m_data);
+        m_data = new_data;
+        m_capacity = new_capacity;
+        return {};
     }
 
 private:

@@ -22,7 +22,6 @@ void TestCase::append(TestCase test)
 
 void TestCase::run_all(TestContext context)
 {
-    printf("got to here!");
     context.notify_init(s_tests_size);
     for (unsigned int id = 0; id < s_tests_size; id++) {
         auto test = s_tests[id];

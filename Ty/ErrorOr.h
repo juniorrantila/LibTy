@@ -66,6 +66,8 @@ struct [[nodiscard]] ErrorOr {
         }
     }
 
+    constexpr ErrorOr& operator=(ErrorOr&& other) = default;
+
     constexpr bool has_value() const
     {
         return m_state == State::Value;
@@ -91,29 +93,11 @@ struct [[nodiscard]] ErrorOr {
     constexpr E const& error() const { return m_error; }
 
     template <typename F>
-    decltype(auto) or_else(F callback)
+    constexpr ErrorOr<T, E> or_else(F callback)
     {
         if (is_error())
-            return callback();
-        using Return = decltype(callback());
-        return Return(release_value());
-    }
-
-    template <typename U>
-    constexpr decltype(auto) or_else(U value) requires(
-        !requires(U value) { value(); })
-    {
-        if (is_error())
-            return value;
-        return U(release_value());
-    }
-
-    template <typename U>
-    ErrorOr<U, E> on_success(U success_value)
-    {
-        if (is_error())
-            return release_error();
-        return success_value;
+            return callback(release_error());
+        return release_value();
     }
 
     constexpr void ignore() const { }
@@ -161,29 +145,12 @@ struct [[nodiscard]] ErrorOr<void, E> {
     constexpr E const& error() const { return m_error.value(); }
 
     template <typename F>
-    decltype(auto) or_else(F callback) const
+    decltype(auto) or_else(F callback)
     {
+        using Return = decltype(callback(release_error()));
         if (is_error())
-            return callback();
-        using Return = decltype(callback());
+            return callback(release_error());
         return Return();
-    }
-
-    template <typename U>
-    constexpr decltype(auto) or_else(U value) const
-        requires(!requires(U value) { value(); })
-    {
-        if (is_error())
-            return value;
-        return U();
-    }
-
-    template <typename U>
-    ErrorOr<U, E> on_success(U success_value)
-    {
-        if (is_error())
-            return release_error();
-        return success_value;
     }
 
     constexpr void ignore() const { }

@@ -1,13 +1,19 @@
-#pragma once
+#include "ErrorOr.h"
 #include "Move.h"
-#include "SmallVector.h"
 #include "Try.h"
+#include "Vector.h"
 
 namespace Ty {
 
-template <typename Key, typename Value, u32 capacity = 16>
-struct SmallMap {
-    constexpr SmallMap() = default;
+template <typename Key, typename Value>
+struct LinearMap {
+    static ErrorOr<LinearMap> create()
+    {
+        return LinearMap {
+            TRY(Vector<Key>::create()),
+            TRY(Vector<Value>::create()),
+        };
+    }
 
     constexpr ErrorOr<void> append(Key key, Value value) requires(
         is_trivially_copyable<Key>and is_trivially_copyable<Value>)
@@ -69,10 +75,16 @@ struct SmallMap {
     }
 
 private:
-    SmallVector<Key, capacity> m_keys {};
-    SmallVector<Value, capacity> m_values {};
+    constexpr LinearMap(Vector<Key>&& keys, Vector<Value>&& values)
+        : m_keys(move(keys))
+        , m_values(move(values))
+    {
+    }
+
+    Vector<Key> m_keys;
+    Vector<Value> m_values;
 };
 
 }
 
-using Ty::SmallMap;
+using Ty::LinearMap;

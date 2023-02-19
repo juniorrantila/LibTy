@@ -100,12 +100,12 @@ struct [[nodiscard]] Optional {
     }
 
     template <typename U>
-    constexpr decltype(auto) or_else(U value) requires(
+    constexpr T or_else(U value) requires(
         !requires(U value) { value(); })
     {
         if (!has_value())
-            return value;
-        return U(release_value());
+            return T(value);
+        return release_value();
     }
 
     constexpr T& value() { return *storage(); }
@@ -316,7 +316,7 @@ struct [[nodiscard]] Optional<T*> {
     explicit constexpr operator bool() { return has_value(); }
 
     template <typename E>
-    constexpr ErrorOr<T, E> or_throw(
+    constexpr ErrorOr<T*, E> or_throw(
         E error) requires is_trivially_copyable<E>
     {
         if (has_value())
@@ -325,7 +325,7 @@ struct [[nodiscard]] Optional<T*> {
     }
 
     template <typename E>
-    constexpr ErrorOr<T, E> or_throw(E&& error) requires(
+    constexpr ErrorOr<T*, E> or_throw(E&& error) requires(
         !is_trivially_copyable<E>)
     {
         if (has_value())

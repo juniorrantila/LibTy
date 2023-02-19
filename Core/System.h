@@ -270,6 +270,16 @@ Optional<c_string> getenv(StringView name);
 
 ErrorOr<bool> has_program(StringView name);
 
+void sleep(u32 seconds);
+
 [[noreturn]] void exit(int code);
+
+ErrorOr<int> fork();
+
+ErrorOr<void> sigemptyset(sigset_t* set);
+
+ErrorOr<void> sigaction(int sig,
+    const struct sigaction* __restrict action,
+    struct sigaction* __restrict old_action);
 
 }

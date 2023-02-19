@@ -24,7 +24,7 @@ Checks: >
   -readability-uppercase-literal-suffix,
   -readability-use-anyofallof,
 WarningsAsErrors: ''
-HeaderFilterRegex: 'subprojects/Core'
+HeaderFilterRegex: 'Core'
 FormatStyle: none
 CheckOptions:
   - key: bugprone-dangling-handle.HandleClasses

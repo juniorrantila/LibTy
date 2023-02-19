@@ -1,118 +1,53 @@
 #include "System.h"
-#include "Syscall.h"
-#include "Ty/Defer.h"
-#include "Ty/StringBuffer.h"
+#include <Ty/Defer.h>
+#include <Ty/StringBuffer.h>
 #include <Unit/Unit.h>
-#include <stdlib.h> // mkstemps()
-#include <unistd.h> // sysconf()
+#include <fcntl.h>
+#include <stdlib.h>
+#include <sys/ioctl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/uio.h>
+#include <unistd.h>
 
 namespace Core::System {
 
 ErrorOr<void> fsync(int fd)
 {
-    auto rv = syscall(Syscall::fsync, fd);
+    auto rv = ::fsync(fd);
     if (rv < 0)
-        return Error::from_syscall(rv);
+        return Error::from_errno();
     return {};
 }
 
-#if __APPLE__ && __x86_64__
-struct [[gnu::packed]] St {
-    i32 dev;
-    i32 inode;
-    i16 mode;
-    u16 links;
-    u32 uid;
-    u32 gid;
-    i32 rdev;
-    struct timespec access_time;
-    struct timespec modify_time;
-    struct timespec change_time;
-    i64 size;
-    i64 blocks;
-    i32 block_size;
-    u32 flags;
-    u32 gen;
-    i32 lspare;
-    i64 qspare[2];
-};
-#elif __linux__ && __x86_64__
-struct St {
-    u64 dev;
-    u64 inode;
-    u64 links;
-    u32 mode;
-    u32 uid;
-    u32 gid;
-    u64 rdev;
-    i64 size;
-    i64 block_size;
-    i64 blocks;
-    struct timespec access_time;
-    struct timespec modify_time;
-    struct timespec change_time;
-    i64 __glibc_reserved[3];
-    u64 __glibc_reserved4;
-    u64 __glibc_reserved5;
-};
-#else
-#    warning "unimplemented"
-#endif
-
 ErrorOr<Stat> fstat(int fd)
 {
-    St st {};
-    auto rv = syscall(Syscall::fstat, fd, &st);
-    if (rv < 0)
-        return Error::from_syscall(rv);
-    struct stat stat;
-    __builtin_memset(&stat, 0, sizeof(stat));
-    stat.st_dev = st.dev;
-    stat.st_ino = st.inode;
-    stat.st_mode = st.mode;
-    stat.st_nlink = st.links;
-    stat.st_uid = st.uid;
-    stat.st_gid = st.gid;
-    stat.st_rdev = st.rdev;
-    stat.st_size = st.size;
-    stat.st_blksize = st.block_size;
-    stat.st_blocks = st.blocks;
-    stat.st_atim = st.access_time;
-    stat.st_mtim = st.modify_time;
-    stat.st_ctim = st.change_time;
-    return Stat(stat);
+    struct stat buf;
+    auto rv = ::fstat(fd, &buf);
+    if (rv < 0) {
+        return Error::from_errno();
+    }
+    return Stat(buf);
 }
 
 ErrorOr<Stat> stat(c_string path)
 {
-    St st {};
-    auto rv = syscall(Syscall::stat, path, &st);
-    if (rv < 0)
-        return Error::from_syscall(rv);
-    struct stat stat;
-    __builtin_memset(&stat, 0, sizeof(stat));
-    stat.st_dev = st.dev;
-    stat.st_ino = st.inode;
-    stat.st_mode = st.mode;
-    stat.st_nlink = st.links;
-    stat.st_uid = st.uid;
-    stat.st_gid = st.gid;
-    stat.st_rdev = st.rdev;
-    stat.st_size = st.size;
-    stat.st_blksize = st.block_size;
-    stat.st_blocks = st.blocks;
-    stat.st_atim = st.access_time;
-    stat.st_mtim = st.modify_time;
-    stat.st_ctim = st.change_time;
-    return Stat(stat);
+    struct stat buf;
+    auto rv = ::stat(path, &buf);
+    if (rv < 0) {
+        return Error::from_errno();
+    }
+    return Stat(buf);
 }
 
 ErrorOr<usize> write(int fd, void const* data, usize size)
 {
-    auto rv = syscall(Syscall::write, fd, data, size);
-    if (rv < 0)
-        return Error::from_syscall(rv);
-    return rv;
+    auto rv = ::write(fd, data, size);
+    if (rv < 0) {
+        return Error::from_errno();
+    }
+    return (usize)rv;
 }
 
 ErrorOr<usize> write(int fd, StringView string)
@@ -132,7 +67,7 @@ ErrorOr<usize> write(int fd, StringBuffer const& string)
 
 ErrorOr<usize> writev(int fd, IOVec const* iovec, int count)
 {
-    auto rv = syscall(Syscall::writev, fd, iovec, count);
+    auto rv = ::writev(fd, (struct iovec*)iovec, count);
     if (rv < 0)
         return Error::from_syscall(rv);
     return rv;
@@ -141,10 +76,9 @@ ErrorOr<usize> writev(int fd, IOVec const* iovec, int count)
 ErrorOr<u8*> mmap(void* addr, usize size, int prot, int flags,
     int fd, long offset)
 {
-    auto rv = syscall(Syscall::mmap, addr, size, prot, flags, fd,
-        offset);
-    if (rv < 0)
-        return Error::from_syscall(rv);
+    auto* rv = ::mmap(addr, size, prot, flags, fd, offset);
+    if (rv == (void*)-1)
+        return Error::from_errno();
     return (u8*)rv;
 }
 
@@ -156,31 +90,30 @@ ErrorOr<u8*> mmap(usize size, int prot, int flags, int fd,
 
 ErrorOr<void> munmap(void const* addr, usize size)
 {
-    auto rv = syscall(Syscall::munmap, addr, size);
+    auto rv = ::munmap((void*)addr, size);
     if (rv < 0)
-        return Error::from_syscall(rv);
+        return Error::from_errno();
     return {};
 }
 
 ErrorOr<void> mprotect(void* addr, usize len, int prot)
 {
-    auto rv = syscall(Syscall::mprotect, addr, len, prot);
+    auto rv = ::mprotect(addr, len, prot);
     if (rv < 0)
-        return Error::from_syscall(rv);
+        return Error::from_errno();
     return {};
 }
 
 ErrorOr<void> remove(c_string path)
 {
     // Assume not directory.
-    auto rv = syscall(Syscall::unlinkat, AT_FDCWD, path, 0);
+    auto rv = ::unlinkat(AT_FDCWD, path, 0);
     if (rv == -EISDIR) {
         // Oops, was directory.
-        rv = syscall(Syscall::unlinkat, AT_FDCWD, path,
-            AT_REMOVEDIR);
+        rv = ::unlinkat(AT_FDCWD, path, AT_REMOVEDIR);
     }
     if (rv < 0)
-        return Error::from_syscall(rv);
+        return Error::from_errno();
     return {};
 }
 
@@ -191,34 +124,34 @@ ErrorOr<int> open(c_string path, int flags)
             "O_CREAT should not be used with this function "
             "variant");
     }
-    auto fd = syscall(Syscall::open, path, flags, 0);
+    auto fd = ::open(path, flags, 0);
     if (fd < 0)
-        return Error::from_syscall(fd);
+        return Error::from_errno();
     return (int)fd;
 }
 
 ErrorOr<int> open(c_string path, int flags, mode_t mode)
 {
-    auto fd = syscall(Syscall::open, path, flags | O_CREAT, mode);
+    auto fd = ::open(path, flags | O_CREAT, mode);
     if (fd < 0)
-        return Error::from_syscall(fd);
+        return Error::from_errno();
     return (int)fd;
 }
 
 ErrorOr<void> close(int fd)
 {
     TRY(fsync(fd));
-    auto rv = syscall(Syscall::close, fd);
+    auto rv = ::close(fd);
     if (rv < 0)
-        return Error::from_syscall(rv);
+        return Error::from_errno();
     return {};
 }
 
 ErrorOr<void> unlink(c_string path)
 {
-    auto rv = syscall(Syscall::unlink, path);
+    auto rv = ::unlink(path);
     if (rv < 0)
-        return Error::from_syscall(rv);
+        return Error::from_errno();
     return {};
 }
 
@@ -272,8 +205,7 @@ bool isatty(int fd)
     // This gets the line discipline of the terminal. When called on
     // something that isn't a terminal it doesn't change
     // `line_discipline` and returns -1.
-    auto rv
-        = syscall(Syscall::ioctl, fd, TIOCGETD, &line_discipline);
+    auto rv = ioctl(fd, TIOCGETD, &line_discipline);
     if (rv == ENOTTY)
         return false;
     return rv == 0;
@@ -305,7 +237,7 @@ Optional<c_string> getenv(StringView name)
             if (!maybe_value_index.has_value())
                 return "";
             auto value_index = maybe_value_index.value();
-            return &env[value_index];
+            return &env[value_index + 1];
         }
     }
     return {};
@@ -336,7 +268,6 @@ ErrorOr<bool> has_program(StringView name)
 
     return false;
 }
-
 TEST_CASE(has_program)
 {
     // 'echo' is most likely installed on machine.
@@ -346,10 +277,38 @@ TEST_CASE(has_program)
     return {};
 }
 
+void sleep(u32 seconds) { ::sleep(seconds); }
+
 [[noreturn]] void exit(int code)
 {
-    syscall(Syscall::exit, code);
+    ::exit(code);
     __builtin_unreachable();
+}
+
+ErrorOr<int> fork()
+{
+    auto pid = ::fork();
+    if (pid < 0)
+        return Error::from_errno();
+    return pid;
+}
+
+ErrorOr<void> sigemptyset(sigset_t* set)
+{
+    auto rv = ::sigemptyset(set);
+    if (rv < 0)
+        return Error::from_errno();
+    return {};
+}
+
+ErrorOr<void> sigaction(int sig,
+    const struct sigaction* __restrict action,
+    struct sigaction* __restrict old_action)
+{
+    auto rv = ::sigaction(sig, action, old_action);
+    if (rv < 0)
+        return Error::from_errno();
+    return {};
 }
 
 }
