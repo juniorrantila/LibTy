@@ -20,6 +20,10 @@ base_cpp_args = [
   '-fdebug-prefix-map=../=',
   '-ffile-prefix-map=../=',
 ]
+test_cpp_args = [
+  base_cpp_args,
+  '-DLIBTY_INCLUDE_TESTS',
+]
 
 test_me = []
 
