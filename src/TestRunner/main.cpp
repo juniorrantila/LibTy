@@ -152,6 +152,7 @@ void UserContext::show_stats() const
     printf("\033[31m%d\033[0m/\033[32m%d\033[0m/%d: %16s: ",
         m_failure_size, m_success_size, m_total_tests,
         m_suite_name);
+    (void)fflush(stdout);
 }
 
 void UserContext::update(u32 id) const
@@ -159,6 +160,7 @@ void UserContext::update(u32 id) const
     rewind();
     show_stats();
     printf("%s", m_names[id]);
+    (void)fflush(stdout);
 }
 
 void UserContext::log_failed_tests() const
