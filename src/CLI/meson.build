@@ -18,10 +18,12 @@ cli_dep = declare_dependency(
   include_directories: '..'
   )
 
-test_me += shared_library('cli-tests',
-  cli_sources,
-  cpp_args: test_cpp_args,
-  dependencies: [
-    cli_deps,
-    unit_dep,
-  ])
+if not meson.is_subproject()
+  test_me += shared_library('cli-tests',
+    cli_sources,
+    cpp_args: test_cpp_args,
+    dependencies: [
+      cli_deps,
+      unit_dep,
+    ])
+endif
