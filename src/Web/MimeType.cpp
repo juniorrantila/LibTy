@@ -2,9 +2,9 @@
 
 namespace Web {
 
-StringView mime_type_string(MimeType type)
+StringView MimeType::name() const
 {
-    switch (type) {
+    switch (m_type) {
     case MimeType::ApplicationJson: return "application/json"sv;
     case MimeType::ApplicationOctetStream:
         return "application/octet-stream"sv;
