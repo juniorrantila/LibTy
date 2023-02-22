@@ -1,5 +1,4 @@
 #include "TCPListener.h"
-#include "TCPClientConnection.h"
 #include <Core/Print.h>
 #include <Core/System.h>
 #include <asm-generic/socket.h>
@@ -57,7 +56,7 @@ ErrorOr<void> TCPListener::close() const
     return {};
 }
 
-ErrorOr<TCPClientConnection> TCPListener::accept() const
+ErrorOr<TCPConnection> TCPListener::accept() const
 {
     sockaddr_storage address;
     socklen_t address_size;
@@ -66,7 +65,7 @@ ErrorOr<TCPClientConnection> TCPListener::accept() const
     if (client_socket < 0) {
         return Error::from_errno();
     }
-    return TRY(TCPClientConnection::create(client_socket, address,
+    return TRY(TCPConnection::create(client_socket, address,
         address_size));
 }
 

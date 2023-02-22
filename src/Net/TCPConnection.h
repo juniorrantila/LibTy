@@ -5,14 +5,14 @@
 
 namespace Net {
 
-struct TCPClientConnection {
+struct TCPConnection {
     struct sockaddr_storage address;
     socklen_t address_size;
 
     int socket;
     mutable StringBuffer write_buffer;
 
-    constexpr TCPClientConnection(TCPClientConnection&& other)
+    constexpr TCPConnection(TCPConnection&& other)
         : address(other.address)
         , address_size(other.address_size)
         , socket(other.socket)
@@ -21,7 +21,7 @@ struct TCPClientConnection {
         other.invalidate();
     }
 
-    ~TCPClientConnection()
+    ~TCPConnection()
     {
         if (is_valid()) {
             destroy();
@@ -29,7 +29,9 @@ struct TCPClientConnection {
         }
     }
 
-    static ErrorOr<TCPClientConnection> create(int socket,
+    static ErrorOr<TCPConnection> connect(StringView host,
+        u16 port);
+    static ErrorOr<TCPConnection> create(int socket,
         struct sockaddr_storage, socklen_t);
     ErrorOr<StringBuffer> read() const;
     ErrorOr<void> flush_write() const;
@@ -72,7 +74,7 @@ struct TCPClientConnection {
     ErrorOr<StringBuffer> printable_address() const;
 
 private:
-    constexpr TCPClientConnection(sockaddr_storage address,
+    constexpr TCPConnection(sockaddr_storage address,
         socklen_t address_size, int socket,
         StringBuffer&& write_buffer)
         : address(address)
@@ -87,7 +89,7 @@ private:
     bool is_valid() const { return socket != -1; }
     void invalidate() { socket = -1; }
 
-    constexpr TCPClientConnection(int socket)
+    constexpr TCPConnection(int socket)
         : socket(socket)
     {
     }
