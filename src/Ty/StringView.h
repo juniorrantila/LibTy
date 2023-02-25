@@ -12,6 +12,12 @@ struct StringView {
 
     constexpr StringView() = default;
 
+    consteval StringView(c_string data)
+        : data(data)
+        , size(__builtin_strlen(data))
+    {
+    }
+
     [[gnu::flatten]] static constexpr StringView from_c_string(
         c_string data)
     {
