@@ -21,6 +21,7 @@ struct Response {
     StringView extra_headers { ""sv };
     Web::MimeType mime_type { Web::MimeType::TextPlain };
     ResponseCode code { ResponseCode::Ok };
+    bool keep_alive { false };
 };
 
 }
@@ -58,6 +59,9 @@ struct Ty::Formatter<HTTP::Response> {
         size += TRY(to.write("Content-Length: "sv,
             response.body.size, "\r\n"sv));
         size += TRY(to.write("Server: Dory\r\n"sv));
+        size += TRY(to.write("Connection: "sv,
+            response.keep_alive ? "keep-alive"sv : "closed"sv,
+            "\r\n"sv));
         size += TRY(to.write(response.extra_headers));
         size += TRY(to.write("\r\n"sv, response.body));
 
