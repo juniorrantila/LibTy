@@ -253,7 +253,10 @@ struct Formatter<ErrorOr<T, E>> {
     static constexpr ErrorOr<u32> write(U& to,
         ErrorOr<T, E> const& erroror)
     {
-        auto size = TRY(to.write("ErrorOr("sv));
+        u32 size = 0;
+
+        auto type_name = Type::name_of<ErrorOr<T, E>>();
+        size += TRY(to.write(type_name, "("sv));
 
         if (erroror.is_error()) {
             size += TRY(to.write(erroror.error()));
@@ -275,7 +278,10 @@ struct Formatter<Optional<T>> {
     static constexpr ErrorOr<u32> write(U& to,
         Optional<T> const& maybe_value)
     {
-        auto size = TRY(to.write("Optional("sv));
+        u32 size = 0;
+
+        auto type_name = Type::name_of<Optional<T>>();
+        size += TRY(to.write(type_name, "("sv));
 
         if (maybe_value.has_value()) {
             size += TRY(to.write(maybe_value.value()));
@@ -283,6 +289,27 @@ struct Formatter<Optional<T>> {
             size += TRY(to.write("None"sv));
         }
 
+        size += TRY(to.write(")"sv));
+        return size;
+    }
+};
+
+template <typename T>
+struct Formatter<T*> {
+    template <typename U>
+    requires Writable<U>
+    static constexpr ErrorOr<u32> write(U& to, T* value)
+    {
+        constexpr auto type_name = Type::name_of<T*>();
+        constexpr auto c_string = Type::name_of<char const*>();
+        static_assert(type_name != c_string,
+            "You probably meant to do \"\"sv or "
+            "StringView::from_c_string(expr)");
+
+        u32 size = 0;
+        size += TRY(to.write("("sv));
+        size += TRY(to.write("("sv, type_name, ")"sv));
+        size += TRY(to.write("("sv, (usize)value, ")"sv));
         size += TRY(to.write(")"sv));
         return size;
     }

@@ -2,6 +2,7 @@
 #include "Base.h"
 #include "Concepts.h"
 #include "ErrorOr.h"
+#include "FormatConsumer.h"
 #include "FormatCounter.h"
 #include "Forward.h"
 #include "Memory.h"
@@ -11,7 +12,7 @@
 
 namespace Ty {
 
-struct StringBuffer {
+struct StringBuffer final : public FormatConsumer<StringBuffer> {
 
     static constexpr ErrorOr<StringBuffer> create_saturated(
         u32 capacity)
@@ -104,46 +105,12 @@ struct StringBuffer {
         return *this;
     }
 
-    template <typename... Args>
-    constexpr ErrorOr<u32> write(Args... args) requires(
-        sizeof...(Args) > 1)
-    {
-        constexpr auto args_size = sizeof...(Args);
-        ErrorOr<u32> results[args_size] = {
-            write(args)...,
-        };
-        u32 written = 0;
-        for (u32 i = 0; i < args_size; i++)
-            written += TRY(results[i]);
-        return written;
-    }
-
-    template <typename... Args>
-    constexpr ErrorOr<u32> writeln(Args... args)
-    {
-        return TRY(write(args..., "\n"sv));
-    }
-
-    constexpr ErrorOr<u32> write(StringView string)
+    constexpr ErrorOr<u32> write_impl(StringView string)
     {
         TRY(expand_if_needed_for_write(string.size));
         auto size = string.unchecked_copy_to(&m_data[m_size]);
         m_size += size;
         return size;
-    }
-
-    template <typename T>
-    constexpr ErrorOr<u32> write(
-        T value) requires is_trivially_copyable<T>
-    {
-        return TRY(Formatter<T>::write(*this, value));
-    }
-
-    template <typename T>
-    constexpr ErrorOr<u32> write(T const& value) requires(
-        !is_trivially_copyable<T>)
-    {
-        return TRY(Formatter<T>::write(*this, value));
     }
 
     constexpr void clear() { m_size = 0; }
