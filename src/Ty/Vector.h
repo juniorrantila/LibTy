@@ -116,10 +116,10 @@ struct Vector {
         return {};
     }
 
-    FLATTEN constexpr View<T> view() { return { m_data, m_size }; }
+    FLATTEN constexpr View<T> view() { return { data(), m_size }; }
     FLATTEN constexpr View<T const> view() const
     {
-        return { m_data, m_size };
+        return { data(), m_size };
     }
 
     FLATTEN constexpr T const& at(u32 index) const
