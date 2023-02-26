@@ -52,13 +52,13 @@ struct Type {
     };
 
     template <typename T>
-    consteval static void* hash_of()
+    consteval static void const* hash_of()
     {
         return std::source_location::current().function_name();
     }
     template <typename T>
     struct AddHash {
-        static consteval void* type_hash()
+        static consteval void const* type_hash()
         {
             return Type::hash_of<T>();
         }
