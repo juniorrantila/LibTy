@@ -19,6 +19,7 @@ base_cpp_args = [
   '-Wno-user-defined-literals',
   '-fdebug-prefix-map=../=',
   '-ffile-prefix-map=../=',
+  '-nostdinc++'
 ]
 test_cpp_args = [
   base_cpp_args,
