@@ -12,6 +12,7 @@
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <unistd.h>
+#include <signal.h>
 
 namespace Core::System {
 
@@ -294,6 +295,16 @@ ErrorOr<int> fork()
     return pid;
 }
 
+#ifdef sigemptyset
+#pragma push_macro("sigemptyset")
+#undef sigemptyset
+ErrorOr<void> sigemptyset(sigset_t* set)
+{
+    *set = { 0 };
+    return {};
+}
+#pragma pop_macro("sigemptyset")
+#else
 ErrorOr<void> sigemptyset(sigset_t* set)
 {
     auto rv = ::sigemptyset(set);
@@ -301,6 +312,7 @@ ErrorOr<void> sigemptyset(sigset_t* set)
         return Error::from_errno();
     return {};
 }
+#endif
 
 ErrorOr<void> sigaction(int sig,
     const struct sigaction* __restrict action,
