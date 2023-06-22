@@ -1,7 +1,6 @@
 #include "TCPListener.h"
 #include <Core/Print.h>
 #include <Core/System.h>
-#include <asm-generic/socket.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
