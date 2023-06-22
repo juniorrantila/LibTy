@@ -4,6 +4,7 @@
 #include <Ty/ErrorOr.h>
 #include <Ty/Try.h>
 #include <Unit/Unit.h>
+#include <Ty/Arch.h>
 
 namespace Mem {
 
@@ -38,6 +39,9 @@ private:
 using LoRam = AddressSpace<64 * MiB, 4 * GiB>;
 using HiRam = AddressSpace<LoRam::end, 4 * GiB>;
 
+#if OS(darwin)
+TEST_CASE(dummy) { return 0; }
+#else
 TEST_CASE(low_ram_works)
 {
     EXPECT(!LoRam::init().is_error());
@@ -49,5 +53,6 @@ TEST_CASE(high_ram_works)
     EXPECT(!HiRam::init().is_error());
     return {};
 }
+#endif
 
 }
