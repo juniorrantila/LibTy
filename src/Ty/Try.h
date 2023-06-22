@@ -17,3 +17,11 @@
         }                                        \
         _result.release_value();                 \
     })
+
+#define VERIFY(expr)                             \
+    ({                                           \
+        decltype(auto) _result = (expr);         \
+        if (!_result) [[unlikely]] {             \
+            __builtin_abort();                   \
+        }                                        \
+    })
