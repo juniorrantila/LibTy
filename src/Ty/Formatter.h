@@ -5,6 +5,7 @@
 #include "Forward.h"
 #include "StringView.h"
 #include "Try.h"
+#include "Type.h"
 
 namespace Ty {
 
